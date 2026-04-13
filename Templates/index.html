@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Voting App</title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #0f172a;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            margin-top: 25px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            width: 250px;
+        }
+
+        img {
+            width: 100%;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        img:hover {
+            transform: scale(1.05);
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            width: 100%;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .vote-btn {
+            background: #22c55e;
+            color: white;
+        }
+
+        .results-btn {
+            background: #3b82f6;
+            color: white;
+            margin-top: 20px;
+        }
+
+        #msg {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        /* 📊 GRÁFICO CENTRADO Y AJUSTADO */
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        canvas {
+            max-width: 420px;
+            margin-top: 10px;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Elige al ganador de la ♦ Batalla de Titulares ♦</h1>
+
+<div class="container">
+
+    <div class="card">
+        <h2>Camilo Sánchez</h2>
+        <img onclick="vote('Camilo Sánchez')" src="{{ url_for('static', filename='images/camilo_sanchez.jpg') }}">
+        <button class="vote-btn" onclick="vote('Camilo Sánchez')">Votar</button>
+    </div>
+
+    <div class="card">
+        <h2>Camilo Pardo</h2>
+        <img onclick="vote('Camilo Pardo')" src="{{ url_for('static', filename='images/camilo_pardo.jpg') }}">
+        <button class="vote-btn" onclick="vote('Camilo Pardo')">Votar</button>
+    </div>
+
+</div>
+
+<div id="msg"></div>
+
+<button class="results-btn" onclick="loadResults()">Ver resultados</button>
+
+<!-- 📊 GRÁFICO -->
+<div class="chart-container">
+    <canvas id="chart"></canvas>
+</div>
+
+<script>
+
+let chart;
+
+// 🗳️ VOTAR
+function vote(candidate){
+
+    if(document.cookie.includes("voted=true")){
+        document.getElementById("msg").innerText = "Ya has votado";
+        return;
+    }
+
+    fetch("/vote", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({candidate})
+    })
+    .then(r => r.json())
+    .then(d => {
+
+        if(d.error){
+            document.getElementById("msg").innerText = d.error;
+        } else {
+            document.getElementById("msg").innerText = "Voto registrado correctamente";
+            document.cookie = "voted=true";
+        }
+
+    })
+    .catch(err => {
+        document.getElementById("msg").innerText = "Error al enviar voto";
+        console.error(err);
+    });
+}
+
+// 📊 RESULTADOS (PIE + %)
+function loadResults(){
+
+    fetch("/results")
+    .then(r => r.json())
+    .then(d => {
+
+        if(chart) chart.destroy();
+
+        const total = d.a + d.b;
+
+        chart = new Chart(document.getElementById("chart"), {
+            type: "pie",
+            data: {
+                labels: ["Camilo Sánchez", "Camilo Pardo"],
+                datasets: [{
+                    data: [d.a, d.b],
+                    backgroundColor: ["#22c55e", "#3b82f6"],
+                    borderColor: "#0f172a",
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: "top",
+                        labels: {
+                            color: "white"
+                        }
+                    },
+                    datalabels: {
+                        color: "white",
+                        font: {
+                            weight: "bold"
+                        },
+                        formatter: (value) => {
+                            if(total === 0) return "0%";
+                            return Math.round((value / total) * 100) + "%";
+                        }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+
+    })
+    .catch(err => {
+        document.getElementById("msg").innerText = "Error cargando resultados";
+        console.error(err);
+    });
+}
+
+</script>
+
+</body>
+</html>

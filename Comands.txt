@@ -1,0 +1,2 @@
+cd C:\Users\USER\Documents\Voting_App
+python app.py

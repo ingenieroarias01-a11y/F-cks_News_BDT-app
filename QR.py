@@ -7,5 +7,7 @@ Created on Mon Apr 13 16:43:13 2026
 
 import qrcode
 
-img = qrcode.make("https://buckskin-stereo-eastcoast.ngrok-free.dev/")
-img.save("Código_QR.png")
+url = "https://f-cks-news-bdt-app.onrender.com"
+
+img = qrcode.make(url)
+img.save("QR_F-cks_News_BDT.png")

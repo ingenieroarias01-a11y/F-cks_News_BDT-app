@@ -1,2 +1,2 @@
-cd C:\Users\USER\Documents\Voting_App
+cd C:\Users\USER\Documents\voting_app
 python app.py

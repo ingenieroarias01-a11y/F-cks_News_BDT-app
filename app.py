@@ -1,23 +1,9 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Apr 13 14:15:47 2026
-
-@author: ALBERTO
-"""
-
-# =========================
-# STEP 1: INSTALL DEPENDENCIES
-# =========================
-# Run in terminal:
-# pip install flask flask-cors qrcode
-
-# =========================
-# STEP 2: BACKEND (app.py)
-# =========================
 
 from flask import Flask, render_template, request, jsonify, make_response
 import sqlite3
 from datetime import datetime
+import os
 
 app = Flask(__name__)
 
@@ -37,6 +23,9 @@ def init_db():
     conn.commit()
     conn.close()
 
+# 🔥 IMPORTANTE: crear DB al iniciar
+init_db()
+
 # ---------- HELPERS ----------
 
 def get_client_ip(req):
@@ -52,7 +41,11 @@ def index():
 
 @app.route("/vote", methods=["POST"])
 def vote():
-    data = request.json
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "No data received"}), 400
+
     candidate = data.get("candidate")
     ip = get_client_ip(request)
 
@@ -106,5 +99,7 @@ def results():
         "winner": "Camilo Sánchez" if a>b else "Camilo Pardo"
     })
 
+# 🔥 IMPORTANTE: puerto dinámico para Render
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)

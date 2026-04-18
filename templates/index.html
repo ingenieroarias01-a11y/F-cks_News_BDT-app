@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voting App</title>
 
-    <!-- Chart.js -->
+    <!-- SOLO Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
     <style>
         body {
@@ -37,18 +36,12 @@
             padding: 15px;
             border-radius: 16px;
             width: 220px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
         img {
             width: 100%;
             border-radius: 10px;
             cursor: pointer;
-            transition: 0.3s;
-        }
-
-        img:hover {
-            transform: scale(1.05);
         }
 
         button {
@@ -78,30 +71,30 @@
         #msg {
             margin-top: 10px;
             font-weight: bold;
-            min-height: 20px;
         }
 
-        /* 📊 GRÁFICO MEJORADO */
+        /* RESULTADOS TEXTO */
+        #resultsText {
+            margin-top: 15px;
+            font-size: 1.2rem;
+        }
+
+        #winner {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #facc15;
+            margin-top: 10px;
+        }
+
+        /* GRÁFICO */
         .chart-container {
-            display: none; /* 🔥 oculto hasta que se use */
-            justify-content: center;
-            align-items: center;
+            display: none;
             margin-top: 20px;
+            justify-content: center;
         }
 
         canvas {
-            max-width: 350px;
-        }
-
-        /* 📱 MOBILE EXTRA */
-        @media (max-width: 500px) {
-            .card {
-                width: 90%;
-            }
-
-            h1 {
-                font-size: 1.2rem;
-            }
+            max-width: 300px;
         }
     </style>
 </head>
@@ -132,7 +125,9 @@
 
 <button class="results-btn" onclick="loadResults()">Ver resultados</button>
 
-<!-- 📊 GRÁFICO -->
+<div id="resultsText"></div>
+<div id="winner"></div>
+
 <div class="chart-container" id="chartContainer">
     <canvas id="chart"></canvas>
 </div>
@@ -141,7 +136,7 @@
 
 let chart;
 
-// 🗳️ VOTAR
+// VOTAR
 function vote(candidate){
 
     if(document.cookie.includes("voted=true")){
@@ -164,61 +159,73 @@ function vote(candidate){
             document.cookie = "voted=true";
         }
 
-    })
-    .catch(err => {
-        document.getElementById("msg").innerText = "Error al enviar voto";
-        console.error(err);
     });
 }
 
-// 📊 RESULTADOS
+// RESULTADOS
 function loadResults(){
 
     fetch("/results")
     .then(r => r.json())
     .then(d => {
 
+        const total = d.total;
+
+        // Mostrar texto claro
+        document.getElementById("resultsText").innerHTML = `
+            Camilo Sánchez: ${d.a.toFixed(1)}%<br>
+            Camilo Pardo: ${d.b.toFixed(1)}%
+        `;
+
+        // Mostrar ganador
+        if(total > 0){
+            const winnerPercent = Math.max(d.a, d.b).toFixed(1);
+            document.getElementById("winner").innerText =
+                `Ganador: ${d.winner} (${winnerPercent}%)`;
+        }
+
+        // Mostrar gráfico
         document.getElementById("chartContainer").style.display = "flex";
 
         if(chart) chart.destroy();
 
-        const total = d.a + d.b;
-
         chart = new Chart(document.getElementById("chart"), {
-            type: "pie",
+            type: "bar",  // 🔥 CAMBIO A BARRAS (más estable)
             data: {
                 labels: ["Camilo Sánchez", "Camilo Pardo"],
                 datasets: [{
                     data: [d.a, d.b],
-                    backgroundColor: ["#22c55e", "#3b82f6"],
-                    borderColor: "#0f172a",
-                    borderWidth: 2
+                    backgroundColor: ["#22c55e", "#3b82f6"]
                 }]
             },
             options: {
                 responsive: true,
-                plugins: {
-                    legend: {
-                        position: "top",
-                        labels: { color: "white" }
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            color: "white",
+                            callback: val => val + "%"
+                        }
                     },
-                    datalabels: {
-                        color: "white",
-                        font: { weight: "bold" },
-                        formatter: (value) => {
-                            if(total === 0) return "0%";
-                            return Math.round((value / total) * 100) + "%";
+                    x: {
+                        ticks: {
+                            color: "white"
                         }
                     }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
                 }
-            },
-            plugins: [ChartDataLabels]
+            }
         });
 
     })
-    .catch(err => {
+    .catch(() => {
         document.getElementById("msg").innerText = "Error cargando resultados";
-        console.error(err);
     });
 }
 

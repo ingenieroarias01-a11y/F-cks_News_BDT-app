@@ -90,14 +90,18 @@ def results():
     total = a + b
 
     if total == 0:
-        return jsonify({"a":0,"b":0,"total":0})
+        a_pct, b_pct = 0, 0
+    else:
+        a_pct = (a/total)*100
+        b_pct = (b/total)*100
 
-    return jsonify({
-        "a": (a/total)*100,
-        "b": (b/total)*100,
-        "total": total,
-        "winner": "Camilo Sánchez" if a>b else "Camilo Pardo"
-    })
+    return render_template(
+        "results.html",
+        a=a_pct,
+        b=b_pct,
+        total=total,
+        winner="Camilo Sánchez" if a > b else "Camilo Pardo"
+    )
 
 # 🔥 IMPORTANTE: puerto dinámico para Render
 if __name__ == "__main__":

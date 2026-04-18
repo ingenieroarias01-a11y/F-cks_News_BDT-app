@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voting App</title>
 
     <!-- Chart.js -->
@@ -15,26 +16,28 @@
             background: #0f172a;
             color: white;
             margin: 0;
-            padding: 0;
+            padding: 10px;
         }
 
         h1 {
-            margin-top: 25px;
+            margin-top: 15px;
+            font-size: 1.4rem;
         }
 
         .container {
             display: flex;
             justify-content: center;
-            gap: 40px;
-            margin-top: 25px;
+            gap: 20px;
+            margin-top: 20px;
             flex-wrap: wrap;
         }
 
         .card {
             background: #1e293b;
-            padding: 20px;
-            border-radius: 12px;
-            width: 250px;
+            padding: 15px;
+            border-radius: 16px;
+            width: 220px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
         img {
@@ -50,12 +53,13 @@
 
         button {
             margin-top: 10px;
-            padding: 10px;
+            padding: 12px;
             width: 100%;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: bold;
+            font-size: 1rem;
         }
 
         .vote-btn {
@@ -66,26 +70,38 @@
         .results-btn {
             background: #3b82f6;
             color: white;
-            margin-top: 20px;
+            margin-top: 15px;
+            width: 80%;
+            max-width: 300px;
         }
 
         #msg {
             margin-top: 10px;
             font-weight: bold;
+            min-height: 20px;
         }
 
-        /* 📊 GRÁFICO CENTRADO Y AJUSTADO */
+        /* 📊 GRÁFICO MEJORADO */
         .chart-container {
-            display: flex;
+            display: none; /* 🔥 oculto hasta que se use */
             justify-content: center;
             align-items: center;
-            margin-top: 10px;
+            margin-top: 20px;
         }
 
         canvas {
-            max-width: 420px;
-            margin-top: 10px;
-            display: block;
+            max-width: 350px;
+        }
+
+        /* 📱 MOBILE EXTRA */
+        @media (max-width: 500px) {
+            .card {
+                width: 90%;
+            }
+
+            h1 {
+                font-size: 1.2rem;
+            }
         }
     </style>
 </head>
@@ -98,13 +114,15 @@
 
     <div class="card">
         <h2>Camilo Sánchez</h2>
-        <img onclick="vote('Camilo Sánchez')" src="{{ url_for('static', filename='images/camilo_sanchez.jpg') }}">
+        <img onclick="vote('Camilo Sánchez')" 
+             src="{{ url_for('static', filename='images/camilo_sanchez.jpg') }}">
         <button class="vote-btn" onclick="vote('Camilo Sánchez')">Votar</button>
     </div>
 
     <div class="card">
         <h2>Camilo Pardo</h2>
-        <img onclick="vote('Camilo Pardo')" src="{{ url_for('static', filename='images/camilo_pardo.jpg') }}">
+        <img onclick="vote('Camilo Pardo')" 
+             src="{{ url_for('static', filename='images/camilo_pardo.jpg') }}">
         <button class="vote-btn" onclick="vote('Camilo Pardo')">Votar</button>
     </div>
 
@@ -115,7 +133,7 @@
 <button class="results-btn" onclick="loadResults()">Ver resultados</button>
 
 <!-- 📊 GRÁFICO -->
-<div class="chart-container">
+<div class="chart-container" id="chartContainer">
     <canvas id="chart"></canvas>
 </div>
 
@@ -153,12 +171,14 @@ function vote(candidate){
     });
 }
 
-// 📊 RESULTADOS (PIE + %)
+// 📊 RESULTADOS
 function loadResults(){
 
     fetch("/results")
     .then(r => r.json())
     .then(d => {
+
+        document.getElementById("chartContainer").style.display = "flex";
 
         if(chart) chart.destroy();
 
@@ -180,15 +200,11 @@ function loadResults(){
                 plugins: {
                     legend: {
                         position: "top",
-                        labels: {
-                            color: "white"
-                        }
+                        labels: { color: "white" }
                     },
                     datalabels: {
                         color: "white",
-                        font: {
-                            weight: "bold"
-                        },
+                        font: { weight: "bold" },
                         formatter: (value) => {
                             if(total === 0) return "0%";
                             return Math.round((value / total) * 100) + "%";
